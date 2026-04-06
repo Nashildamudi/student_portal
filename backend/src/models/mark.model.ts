@@ -1,29 +1,47 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
+import { IMark } from '../types';
 
-export interface IMark extends Document {
-  component_id: mongoose.Types.ObjectId;
-  student_id: mongoose.Types.ObjectId;
-  assignment_id?: mongoose.Types.ObjectId;
-  marks_obtained: number;
-  remarks?: string;
-  recorded_by?: mongoose.Types.ObjectId;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-const MarkSchema = new Schema<IMark>(
+const markSchema = new Schema<IMark>(
   {
-    component_id: { type: Schema.Types.ObjectId, ref: 'MarkComponent', required: true },
-    student_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    assignment_id: { type: Schema.Types.ObjectId, ref: 'TeachingAssignment' },
-    marks_obtained: { type: Number, required: true },
-    remarks: { type: String },
-    recorded_by: { type: Schema.Types.ObjectId, ref: 'User' },
+    componentId: {
+      type: Schema.Types.ObjectId,
+      ref: 'MarkComponent',
+      required: [true, 'Component is required'],
+    },
+    studentId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Student',
+      required: [true, 'Student is required'],
+    },
+    marksObtained: {
+      type: Number,
+      required: [true, 'Marks obtained is required'],
+      min: [0, 'Marks cannot be negative'],
+    },
+    remarks: {
+      type: String,
+      trim: true,
+      maxlength: [500, 'Remarks cannot exceed 500 characters'],
+    },
+    recordedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: [true, 'Recorded by is required'],
+    },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: {
+      transform(_doc, ret) {
+        delete ret.__v;
+        return ret;
+      },
+    },
+  }
 );
 
-// Unique: one mark entry per student per component
-MarkSchema.index({ student_id: 1, component_id: 1 }, { unique: true });
+// Unique constraint: one mark per student per component
+markSchema.index({ componentId: 1, studentId: 1 }, { unique: true });
+markSchema.index({ studentId: 1 });
 
-export const Mark = mongoose.model<IMark>('Mark', MarkSchema, 'marks');
+export const Mark = mongoose.model<IMark>('Mark', markSchema);

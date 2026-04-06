@@ -1,14 +1,17 @@
-import { Request, Response, NextFunction } from 'express';
-import { ApiError } from '../utils/ApiError';
+import { Response, NextFunction } from 'express';
+import { ApiError } from '../utils';
+import { AuthenticatedRequest, UserRole } from '../types';
 
-export const authorizeRoles = (...allowedRoles: string[]) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+export const authorize = (...allowedRoles: UserRole[]) => {
+  return (req: AuthenticatedRequest, _res: Response, next: NextFunction): void => {
     if (!req.user) {
-      return next(new ApiError(401, 'Unauthorized. Please login.'));
+      next(ApiError.unauthorized('Authentication required'));
+      return;
     }
 
-    if (!allowedRoles.includes(req.user.role)) {
-      return next(new ApiError(403, `Role ${req.user.role} is not allowed to access this resource.`));
+    if (!allowedRoles.includes(req.user.role as UserRole)) {
+      next(ApiError.forbidden(`Role '${req.user.role}' is not authorized to access this resource`));
+      return;
     }
 
     next();

@@ -1,34 +1,66 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
+import { ITeachingAssignment } from '../types';
 
-export interface ITeachingAssignment extends Document {
-  faculty_id: mongoose.Types.ObjectId;
-  subject_id: mongoose.Types.ObjectId;
-  department_id: mongoose.Types.ObjectId;
-  course_id: mongoose.Types.ObjectId;
-  section: string;
-  semester: number;
-  academic_year: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-const TeachingAssignmentSchema = new Schema<ITeachingAssignment>(
+const teachingAssignmentSchema = new Schema<ITeachingAssignment>(
   {
-    faculty_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    subject_id: { type: Schema.Types.ObjectId, ref: 'Subject', required: true },
-    department_id: { type: Schema.Types.ObjectId, ref: 'Department', required: true },
-    course_id: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
-    section: { type: String, required: true },
-    semester: { type: Number, required: true },
-    academic_year: { type: String, required: true },
+    facultyId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: [true, 'Faculty is required'],
+    },
+    subjectId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Subject',
+      required: [true, 'Subject is required'],
+    },
+    departmentId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Department',
+      required: [true, 'Department is required'],
+    },
+    courseId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Course',
+      required: [true, 'Course is required'],
+    },
+    semester: {
+      type: Number,
+      required: [true, 'Semester is required'],
+      min: [1, 'Semester must be at least 1'],
+      max: [12, 'Semester cannot exceed 12'],
+    },
+    section: {
+      type: String,
+      required: [true, 'Section is required'],
+      uppercase: true,
+      trim: true,
+    },
+    academicYear: {
+      type: String,
+      required: [true, 'Academic year is required'],
+      trim: true,
+      match: [/^\d{4}-\d{2}$/, 'Academic year must be in format YYYY-YY'],
+    },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: {
+      transform(_doc, ret) {
+        delete ret.__v;
+        return ret;
+      },
+    },
+  }
 );
 
-TeachingAssignmentSchema.index({ subject_id: 1, semester: 1, section: 1, academic_year: 1 }, { unique: true });
+// Unique constraint: one faculty can only be assigned once to a subject/section/year combo
+teachingAssignmentSchema.index(
+  { subjectId: 1, semester: 1, section: 1, academicYear: 1 },
+  { unique: true }
+);
+teachingAssignmentSchema.index({ facultyId: 1 });
 
 export const TeachingAssignment = mongoose.model<ITeachingAssignment>(
   'TeachingAssignment',
-  TeachingAssignmentSchema,
-  'teaching_assignments'
+  teachingAssignmentSchema
 );

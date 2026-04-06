@@ -1,22 +1,43 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
+import { IMarkComponent } from '../types';
 
-export interface IMarkComponent extends Document {
-  assignment_id: mongoose.Types.ObjectId;
-  name: string;
-  max_marks: number;
-  type: 'Internal' | 'Assignment' | 'Quiz' | 'Project' | 'Other';
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-const MarkComponentSchema = new Schema<IMarkComponent>(
+const markComponentSchema = new Schema<IMarkComponent>(
   {
-    assignment_id: { type: Schema.Types.ObjectId, ref: 'TeachingAssignment', required: true },
-    name: { type: String, required: true },
-    max_marks: { type: Number, required: true },
-    type: { type: String, enum: ['Internal', 'Assignment', 'Quiz', 'Project', 'Other'], default: 'Internal' }
+    assignmentId: {
+      type: Schema.Types.ObjectId,
+      ref: 'TeachingAssignment',
+      required: [true, 'Assignment is required'],
+    },
+    name: {
+      type: String,
+      required: [true, 'Component name is required'],
+      trim: true,
+      maxlength: [100, 'Name cannot exceed 100 characters'],
+    },
+    maxMarks: {
+      type: Number,
+      required: [true, 'Maximum marks is required'],
+      min: [1, 'Maximum marks must be at least 1'],
+      max: [200, 'Maximum marks cannot exceed 200'],
+    },
+    type: {
+      type: String,
+      required: [true, 'Type is required'],
+      enum: ['internal', 'assignment', 'quiz', 'project', 'lab', 'other'],
+      default: 'internal',
+    },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: {
+      transform(_doc, ret) {
+        delete ret.__v;
+        return ret;
+      },
+    },
+  }
 );
 
-export const MarkComponent = mongoose.model<IMarkComponent>('MarkComponent', MarkComponentSchema, 'mark_components');
+markComponentSchema.index({ assignmentId: 1 });
+
+export const MarkComponent = mongoose.model<IMarkComponent>('MarkComponent', markComponentSchema);

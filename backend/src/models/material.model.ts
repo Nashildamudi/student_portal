@@ -1,25 +1,47 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
+import { IMaterial } from '../types';
 
-export interface IMaterial extends Document {
-  title: string;
-  filename: string;
-  filepath: string;
-  subject_id: mongoose.Types.ObjectId;
-  uploaded_by: mongoose.Types.ObjectId;
-  department_id?: mongoose.Types.ObjectId;
-  createdAt: Date;
-}
-
-const MaterialSchema = new Schema<IMaterial>(
+const materialSchema = new Schema<IMaterial>(
   {
-    title: { type: String, required: true },
-    filename: { type: String, required: true },
-    filepath: { type: String, required: true },
-    subject_id: { type: Schema.Types.ObjectId, ref: 'Subject', required: true },
-    uploaded_by: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    department_id: { type: Schema.Types.ObjectId, ref: 'Department' },
+    title: {
+      type: String,
+      required: [true, 'Title is required'],
+      trim: true,
+      maxlength: [200, 'Title cannot exceed 200 characters'],
+    },
+    filename: {
+      type: String,
+      required: [true, 'Filename is required'],
+      trim: true,
+    },
+    filepath: {
+      type: String,
+      required: [true, 'Filepath is required'],
+      trim: true,
+    },
+    subjectId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Subject',
+      required: [true, 'Subject is required'],
+    },
+    uploadedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: [true, 'Uploaded by is required'],
+    },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: {
+      transform(_doc, ret) {
+        delete ret.__v;
+        return ret;
+      },
+    },
+  }
 );
 
-export const Material = mongoose.model<IMaterial>('Material', MaterialSchema);
+materialSchema.index({ subjectId: 1 });
+materialSchema.index({ uploadedBy: 1 });
+
+export const Material = mongoose.model<IMaterial>('Material', materialSchema);

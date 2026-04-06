@@ -1,89 +1,121 @@
-import { Attendance } from '../models/attendance.model';
-import { Mark } from '../models/mark.model';
-import { Material } from '../models/material.model';
-import { MarkComponent } from '../models/markComponent.model';
-import { TeachingAssignment } from '../models/teachingAssignment.model';
-import { Student } from '../models/student.model';
+import { Student, Attendance, Mark, Material, TeachingAssignment, MarkComponent } from '../models';
+import { ApiError } from '../utils';
 
-export const StudentService = {
-  async getProfile(userId: string) {
-    return Student.findOne({ user_id: userId })
-      .populate('user_id', 'name email phone gender is_active createdAt')
-      .populate('department_id', 'name code')
-      .populate('course_id', 'name code');
+export const studentService = {
+  // Get student profile
+  async getMyProfile(userId: string) {
+    const student = await Student.findOne({ userId })
+      .populate('userId', 'name email phone')
+      .populate('departmentId', 'name code')
+      .populate('courseId', 'name code totalSemesters');
+
+    if (!student) throw ApiError.notFound('Student profile not found');
+    return student;
   },
 
-  async getAttendance(userId: string) {
-    // Find this student's Student doc first
-    const studentDoc = await Student.findOne({ user_id: userId });
-    if (!studentDoc) return { records: [], summary: [] };
+  // Get attendance summary
+  async getMyAttendance(userId: string) {
+    const student = await Student.findOne({ userId });
+    if (!student) throw ApiError.notFound('Student profile not found');
 
-    const records = await Attendance.find({ student_id: studentDoc._id })
-      .populate({
-        path: 'assignment_id',
-        populate: { path: 'subject_id', select: 'name code' },
-      })
-      .sort({ date: -1 });
-
-    // Calculate per-subject attendance summary
-    const subjectMap: Record<string, { subject: any; total: number; present: number }> = {};
-    for (const rec of records) {
-      const assignment = rec.assignment_id as any;
-      const subject = assignment?.subject_id;
-      if (!subject) continue;
-      const key = subject._id.toString();
-      if (!subjectMap[key]) {
-        subjectMap[key] = { subject, total: 0, present: 0 };
-      }
-      subjectMap[key].total++;
-      if (rec.status === 'present' || rec.status === 'od') subjectMap[key].present++;
-    }
-
-    return {
-      records,
-      summary: Object.values(subjectMap).map((s) => ({
-        subject: s.subject,
-        total: s.total,
-        present: s.present,
-        percentage: s.total > 0 ? Math.round((s.present / s.total) * 100) : 0,
-      })),
-    };
-  },
-
-  async getMarks(userId: string) {
-    // Find student doc
-    const studentDoc = await Student.findOne({ user_id: userId });
-    if (!studentDoc) return [];
-
-    return Mark.find({ student_id: studentDoc._id })
-      .populate({
-        path: 'component_id',
-        select: 'name max_marks type',
-        populate: {
-          path: 'assignment_id',
-          select: 'subject_id semester section',
-          populate: { path: 'subject_id', select: 'name code' },
-        },
-      })
-      .sort({ createdAt: -1 });
-  },
-
-  async getMaterials(userId: string) {
-    // Get materials for all subjects assigned in assignments
-    const studentDoc = await Student.findOne({ user_id: userId });
-    if (!studentDoc) return [];
-
-    // Find assignments matching this student's course+semester+section
+    // Get all assignments for this student's class
     const assignments = await TeachingAssignment.find({
-      course_id: studentDoc.course_id,
-      semester: studentDoc.semester,
-      section: studentDoc.section,
-    }).populate('subject_id');
+      courseId: student.courseId,
+      semester: student.semester,
+      section: student.section,
+    }).populate('subjectId', 'name code');
 
-    const subjectIds = assignments.map((a: any) => a.subject_id?._id).filter(Boolean);
-    return Material.find({ subject_id: { $in: subjectIds } })
-      .populate('subject_id', 'name code')
-      .populate('uploaded_by', 'name')
+    // Get attendance summary for each subject
+    const attendancePromises = assignments.map(async (assignment) => {
+      const records = await Attendance.find({
+        assignmentId: assignment._id,
+        studentId: student._id,
+      }).sort({ date: -1 });
+
+      const total = records.length;
+      const present = records.filter(
+        (r) => r.status === 'present' || r.status === 'od'
+      ).length;
+      const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
+
+      return {
+        subject: assignment.subjectId,
+        total,
+        present,
+        absent: total - present,
+        percentage,
+        records: records.slice(0, 10), // Last 10 records
+      };
+    });
+
+    return Promise.all(attendancePromises);
+  },
+
+  // Get marks
+  async getMyMarks(userId: string) {
+    const student = await Student.findOne({ userId });
+    if (!student) throw ApiError.notFound('Student profile not found');
+
+    // Get all assignments for this student's class
+    const assignments = await TeachingAssignment.find({
+      courseId: student.courseId,
+      semester: student.semester,
+      section: student.section,
+    }).populate('subjectId', 'name code');
+
+    // Get marks for each subject
+    const marksPromises = assignments.map(async (assignment) => {
+      const components = await MarkComponent.find({ assignmentId: assignment._id });
+      const componentIds = components.map((c) => c._id);
+
+      const marks = await Mark.find({
+        componentId: { $in: componentIds },
+        studentId: student._id,
+      }).populate('componentId', 'name maxMarks type');
+
+      const totalMax = components.reduce((sum, c) => sum + c.maxMarks, 0);
+      const totalObtained = marks.reduce((sum, m) => sum + m.marksObtained, 0);
+      const percentage = totalMax > 0 ? Math.round((totalObtained / totalMax) * 100) : 0;
+
+      return {
+        subject: assignment.subjectId,
+        components: components.map((c) => {
+          const mark = marks.find((m) => (m.componentId as unknown as { _id: { toString: () => string } })._id.toString() === c._id.toString());
+          return {
+            _id: c._id,
+            name: c.name,
+            maxMarks: c.maxMarks,
+            type: c.type,
+            marksObtained: mark?.marksObtained ?? null,
+            remarks: mark?.remarks ?? '',
+          };
+        }),
+        totalMax,
+        totalObtained,
+        percentage,
+      };
+    });
+
+    return Promise.all(marksPromises);
+  },
+
+  // Get study materials
+  async getMyMaterials(userId: string) {
+    const student = await Student.findOne({ userId });
+    if (!student) throw ApiError.notFound('Student profile not found');
+
+    // Get subjects for this student's class
+    const assignments = await TeachingAssignment.find({
+      courseId: student.courseId,
+      semester: student.semester,
+      section: student.section,
+    });
+    const subjectIds = assignments.map((a) => a.subjectId);
+
+    // Get materials for these subjects
+    return Material.find({ subjectId: { $in: subjectIds } })
+      .populate('subjectId', 'name code')
+      .populate('uploadedBy', 'name')
       .sort({ createdAt: -1 });
   },
 };
