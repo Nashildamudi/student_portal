@@ -269,7 +269,7 @@ const Dashboard: React.FC = () => {
                       <h4 className="font-bold text-white mb-1">{m.title}</h4>
                       <p className="text-xs text-indigo-400 mb-1">{m.subject_id?.name} ({m.subject_id?.code})</p>
                       <p className="text-xs text-slate-500 mb-4">by {m.uploaded_by?.name}</p>
-                      <a href={`http://localhost:5000${m.filepath}`} target="_blank" rel="noopener noreferrer"
+                      <a href={`${import.meta.env.VITE_API_URL?.replace('/api', '')}${m.filepath}`} target="_blank" rel="noopener noreferrer"
                         className="flex items-center justify-center space-x-2 w-full py-2 px-3 bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/40 rounded-xl text-indigo-300 text-sm font-medium transition-all">
                         <Download className="w-4 h-4" />
                         <span>Download PDF</span>

@@ -214,7 +214,7 @@ const Dashboard: React.FC = () => {
                           <p className="font-medium text-white">{m.title}</p>
                           <p className="text-xs text-slate-400">{m.subject_id?.name} · {new Date(m.createdAt).toLocaleDateString()}</p>
                         </div>
-                        <a href={`http://localhost:5000${m.filepath}`} target="_blank" rel="noopener noreferrer"
+                        <a href={`${import.meta.env.VITE_API_URL?.replace('/api', '')}${m.filepath}`} target="_blank" rel="noopener noreferrer"
                           className="text-xs px-3 py-1.5 bg-teal-500/20 text-teal-300 border border-teal-500/40 rounded-lg hover:bg-teal-500/30 transition-colors">
                           View PDF
                         </a>

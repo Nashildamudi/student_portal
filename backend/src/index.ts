@@ -13,7 +13,7 @@ import commonRoutes from './routes/common.routes';
 
 const app: Express = express();
 
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+app.use(cors({ origin: '*', credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));
@@ -41,8 +41,8 @@ export { app };
 const startServer = async () => {
   try {
     await connectDB();
-    const port = env.PORT || 5000;
-    app.listen(port, () => {
+    const port = env.PORT || 8001;
+    app.listen(port, '0.0.0.0', () => {
       console.log(`Server running on port ${port} in ${env.NODE_ENV} mode`);
     });
   } catch (error) {
