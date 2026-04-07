@@ -7,7 +7,6 @@ import { LoadingScreen } from './components/ui/spinner';
 
 // Pages
 import LoginPage from './pages/Login';
-import RegisterPage from './pages/Register';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/Dashboard';
@@ -73,7 +72,6 @@ function AppRoutes() {
     <Routes>
       {/* Public Routes */}
       <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
-      <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
 
       {/* Admin Routes */}
       <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />

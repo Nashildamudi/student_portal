@@ -14,18 +14,12 @@ Build a full production-level Student Portal web application with roles: Admin, 
 2. **Faculty**: Views teaching assignments, marks attendance, enters marks, uploads study materials
 3. **Student**: Views profile, attendance percentage, marks/grades, downloads study materials
 
-## Core Requirements
-1. Multi-role authentication (Admin, Faculty, Student) with JWT
-2. Department, Course & Subject management (Admin)
-3. Student & Faculty registration with academic data (Admin)
-4. Teaching Assignment creation (Admin)
-5. Attendance tracking with date/session picker (Faculty)
-6. Marks management with components (Faculty)
-7. Study materials upload/download (Faculty/Student)
-8. Profile & academic data viewing (Student)
-9. Role-based route protection (401/403)
+## Credential Flow
+- **No self-registration**: Only Admin can create student/faculty accounts
+- Admin creates accounts and receives credentials to share with users
+- Students/Faculty login with credentials provided by Admin
 
-## What's Been Implemented (Apr 2026)
+## What's Been Implemented (Apr 7, 2026)
 
 ### Backend (Python FastAPI - server.py)
 - Auth routes: `/api/auth/login`, `/api/auth/register`, `/api/auth/profile`
@@ -34,52 +28,40 @@ Build a full production-level Student Portal web application with roles: Admin, 
 - Faculty routes: assignments, students-for-assignment, subjects, attendance (mark/get/summary), mark components CRUD, marks (enter/get), materials (upload/get/delete)
 - Student routes: profile, attendance, marks, materials
 - Database seeding endpoint: `/api/seed`
-- Health check: `/api/health`
 
 ### Frontend (React + Vite + TypeScript)
-- Login page with React Hook Form + Zod validation, demo credentials display
-- Registration page with role selection
+- Login page with demo credentials display (no self-registration)
 - **Admin Dashboard**: Stats overview, quick actions, system status
-- **Admin Pages**: Departments, Courses, Subjects, Students, Faculty, Assignments, Users - all with list/create/delete/filter
-- **Faculty Dashboard**: Teaching assignments overview, quick links
-- **Faculty Pages**: Attendance (cascading class/date/session picker, per-student status), Marks (component management, marks entry grid), Materials (upload/list/delete)
-- **Student Dashboard**: Profile details, quick access links
-- **Student Pages**: Attendance (subject-wise summary with progress bars), Marks (component-wise with grades), Materials (grouped by subject)
-- **Layout**: Responsive sidebar navigation, role-based menu items, user menu with logout
+- **Admin Pages**: Departments, Courses, Subjects, Students (with credential banner), Faculty (with credential banner), Assignments, Users
+- **Faculty Dashboard**: Teaching assignments overview
+- **Faculty Pages**: Attendance, Marks, Materials
+- **Student Dashboard**: Profile details
+- **Student Pages**: Attendance, Marks, Materials
+- **Layout**: Responsive sidebar navigation, role-based menus, user menu with logout
 - **Auth Context**: JWT token management, auto-redirect by role
-- **Toast System**: Custom toast notifications
-
-### Database Models
-- Users, Students, Faculty, Departments, Courses, Subjects
-- Teaching Assignments, Attendance, Mark Components, Marks, Materials
 
 ## What's Working
-- [x] Login/Logout for all roles (Admin, Faculty, Student)
+- [x] Login/Logout for all roles
 - [x] Role-based route protection and redirects
-- [x] Admin Dashboard with real-time stats
-- [x] Department/Course/Subject CRUD
-- [x] Student/Faculty registration and management
-- [x] Teaching Assignment creation and management
-- [x] User status toggle (activate/deactivate)
-- [x] Faculty attendance marking with date/session
-- [x] Faculty marks entry with component management
-- [x] Faculty materials upload
-- [x] Student profile/attendance/marks/materials viewing
-- [x] Database seeding with comprehensive test data
+- [x] Admin creates student → credentials shown → student can login
+- [x] Admin creates faculty → credentials shown → faculty can login
+- [x] All CRUD operations (departments, courses, subjects, students, faculty, assignments)
+- [x] Faculty attendance, marks, materials
+- [x] Student profile, attendance, marks, materials viewing
+- [x] Database seeding with test data
 
 ## Test Results (Apr 7, 2026)
 - Backend: 100% (31/31 tests passed)
 - Frontend: 100% (all flows working)
-- Test file: /app/backend/tests/test_student_portal.py
 
 ## Backlog / Future Work
-- P1: Fix HTTP status codes (return 201 for POST endpoints, currently returns 200)
+- P1: Add edit functionality for departments/courses/subjects/students/faculty
+- P1: Fix HTTP status codes (return 201 for POST endpoints)
 - P2: Add password reset functionality
 - P2: Add email notifications
-- P2: Add edit functionality for departments/courses/subjects/students/faculty
-- P3: Add bulk student/faculty import
-- P3: Add attendance reports/analytics with charts
-- P3: Add export to PDF/Excel for marks/attendance
+- P3: Bulk student/faculty import via CSV
+- P3: Attendance reports with charts/analytics
+- P3: Export marks/attendance to PDF/Excel
 
 ## Test Credentials
 See `/app/memory/test_credentials.md`

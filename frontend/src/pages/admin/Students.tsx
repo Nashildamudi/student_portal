@@ -25,6 +25,7 @@ export default function StudentsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [filterCourse, setFilterCourse] = useState('');
+  const [createdCredentials, setCreatedCredentials] = useState<{ name: string; email: string; password: string } | null>(null);
 
   const fetchData = async () => {
     try {
@@ -58,7 +59,9 @@ export default function StudentsPage() {
     setError('');
 
     try {
+      const savedCredentials = { name: formData.name, email: formData.email, password: formData.password };
       await adminApi.createStudent(formData);
+      setCreatedCredentials(savedCredentials);
       setFormData({
         name: '', email: '', password: 'Student@123', phone: '',
         departmentId: '', courseId: '', rollNumber: '',
@@ -112,6 +115,33 @@ export default function StudentsPage() {
           placeholder="All Courses"
         />
       </div>
+
+      {createdCredentials && (
+        <Card className="border-green-200 bg-green-50" data-testid="credentials-banner">
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="font-semibold text-green-800 mb-2">Student Created Successfully!</h3>
+                <p className="text-sm text-green-700 mb-1">Share these login credentials with the student:</p>
+                <div className="bg-white rounded-lg p-3 mt-2 border border-green-200">
+                  <p className="text-sm"><span className="font-medium">Name:</span> {createdCredentials.name}</p>
+                  <p className="text-sm"><span className="font-medium">Email:</span> {createdCredentials.email}</p>
+                  <p className="text-sm"><span className="font-medium">Password:</span> {createdCredentials.password}</p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-green-700 hover:bg-green-100"
+                onClick={() => setCreatedCredentials(null)}
+                data-testid="dismiss-credentials"
+              >
+                Dismiss
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {showForm && (
         <Card>

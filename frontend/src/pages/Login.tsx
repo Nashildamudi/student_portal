@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -124,30 +124,28 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-muted-foreground">
-            Don't have an account?{' '}
-            <Link to="/register" className="text-primary hover:underline">
-              Register
-            </Link>
-          </div>
-
           <div className="mt-6 border-t pt-4">
-            <p className="text-xs text-center text-muted-foreground mb-2">Demo Credentials</p>
+            <p className="text-xs text-center text-muted-foreground mb-3">
+              Login credentials are provided by your institution admin.
+            </p>
+            <p className="text-xs text-center text-muted-foreground mb-2">Demo Accounts</p>
             <div className="grid grid-cols-3 gap-2 text-xs">
               <div className="bg-purple-50 p-2 rounded text-center">
                 <p className="font-medium text-purple-700">Admin</p>
                 <p className="text-purple-600">admin@portal.com</p>
+                <p className="text-purple-500">Admin@123</p>
               </div>
               <div className="bg-blue-50 p-2 rounded text-center">
                 <p className="font-medium text-blue-700">Faculty</p>
                 <p className="text-blue-600">rajesh.kumar@portal.com</p>
+                <p className="text-blue-500">Faculty@123</p>
               </div>
               <div className="bg-green-50 p-2 rounded text-center">
                 <p className="font-medium text-green-700">Student</p>
                 <p className="text-green-600">amit.singh@portal.com</p>
+                <p className="text-green-500">Student@123</p>
               </div>
             </div>
-            <p className="text-xs text-center text-muted-foreground mt-2">Password: Role@123 (e.g., Admin@123)</p>
           </div>
         </CardContent>
       </Card>
