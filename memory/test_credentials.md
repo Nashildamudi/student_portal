@@ -1,20 +1,22 @@
-# Test Credentials for Student Portal
+# Test Credentials
 
 ## Admin
 - Email: admin@portal.com
 - Password: Admin@123
 
 ## Faculty
-- Email: faculty@portal.com
+- Email: rajesh.kumar@portal.com
+- Password: Faculty@123
+- Email: priya.sharma@portal.com
 - Password: Faculty@123
 
-## Student
-- Email: student@portal.com
+## Students
+- Email: amit.singh@portal.com
+- Password: Student@123
+- Email: sneha.patel@portal.com
+- Password: Student@123
+- Email: rahul.verma@portal.com
 - Password: Student@123
 
----
-
-To re-seed the database (reset all data), call:
-```
-POST /api/seed
-```
+## Seed Endpoint
+- POST /api/seed (reseeds all data)
